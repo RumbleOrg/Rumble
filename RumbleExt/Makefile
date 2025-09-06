@@ -37,7 +37,8 @@ lwip_CFLAGS := \
 	       -I$(SRCDIR)/include \
 	       -I$(SRCDIR)/ports/include \
 	       $(CONFIG_CFLAGS) \
-	       -Wno-ambiguous-macro
+	       -Wno-ambiguous-macro \
+	       -Wno-unused-function
 lwip_LDFLAGS := -L$(THEOS_OBJ_DIR)
 lwip_USE_MODULES := 0
 $(eval $(call abi_fix,lwip))
@@ -65,6 +66,7 @@ include hev-socks5-tunnel/build.mk
 hev-socks5-tunnel_FILES := $(SRCFILES)
 hev-socks5-tunnel_LINKAGE_TYPE := static
 hev-socks5-tunnel_CFLAGS := \
+	-I$(SRCDIR) \
 	-I$(SRCDIR)/misc \
 	-I$(SRCDIR)/core/include \
 	-I$(SRCDIR)/../third-part/yaml/include \

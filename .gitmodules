@@ -1,6 +1,8 @@
 [submodule "RumbleExt/hev-socks5-tunnel"]
 	path = RumbleExt/hev-socks5-tunnel
 	url = https://github.com/heiher/hev-socks5-tunnel.git
+	branch = main
 [submodule "RumbleExt/byedpi"]
 	path = RumbleExt/byedpi
 	url = https://github.com/hufrea/byedpi.git
+	branch = main
