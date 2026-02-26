@@ -1,6 +1,6 @@
 #import <UIKit/UIKit.h>
 
-@interface RMSettingsViewController : UITableViewController
+@interface RMSettingsViewController : UITableViewController <UITableViewDelegate, UITableViewDataSource, UITextViewDelegate>
 {
 	NSArray *settings;
 }
