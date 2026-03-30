@@ -1,0 +1,75 @@
+name: Build Unsigned IPA
+# Got this from https://github.com/InfernumVII/Rumble
+on:
+  push:
+    branches: [master, refactoring]
+  pull_request:
+    branches: [master, refactoring]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Unsigned IPA
+    runs-on: macos-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # ── 2. Install Theos ─────────────────────────────────────────────────────
+      - name: Install Theos
+        run: |
+          export THEOS=~/.theos
+          git clone --recursive https://github.com/theos/theos $THEOS
+          echo "THEOS=$THEOS" >> $GITHUB_ENV
+
+      # ── 3. Install iOS SDK ───────────────────────────────────────────────────
+      - name: Install iOS SDK
+        run: |
+          XCODE_SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          SDK_VERSION=$(xcrun --sdk iphoneos --show-sdk-version)
+          echo "Using iOS SDK $SDK_VERSION at $XCODE_SDK"
+          mkdir -p $THEOS/sdks
+          ln -sf "$XCODE_SDK" "$THEOS/sdks/iPhoneOS${SDK_VERSION}.sdk"
+          echo "SDK_VERSION=$SDK_VERSION" >> $GITHUB_ENV
+
+      # ── 4. Install ldid (required by Theos for fake-signing) ─────────────────
+      - name: Install ldid
+        run: brew install ldid
+
+      # ── 5. Build with Theos ──────────────────────────────────────────────────
+      - name: Build package
+        run: |
+          make package \
+            THEOS=$THEOS \
+            FINALPACKAGE=1 \
+            ARCHS="arm64" \
+            TARGET="iphone:clang:${{ env.SDK_VERSION }}:15.0" \
+            2>&1
+
+      # ── 6. Locate the .ipa produced by Theos ────────────────────────────────
+      - name: Locate IPA
+        run: |
+          set -e
+          echo "Contents of packages/:"
+          ls -la packages/ || true
+
+          IPA_PATH=$(find packages -name "*.ipa" | head -1)
+          if [ -z "$IPA_PATH" ]; then
+            echo "ERROR: No .ipa found in packages/"
+            exit 1
+          fi
+
+          echo "Found: $IPA_PATH"
+          echo "IPA_PATH=$IPA_PATH" >> $GITHUB_ENV
+
+      # ── 7. Upload IPA as artifact ────────────────────────────────────────────
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rumble-unsigned-ipa
+          path: ${{ env.IPA_PATH }}
+          retention-days: 14

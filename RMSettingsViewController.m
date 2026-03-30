@@ -2,12 +2,10 @@
 #import "RMSettingsViewController.h"
 
 @implementation RMSettingsViewController
-- (void)loadView {
-	[super loadView];
-
-	self.navigationItem.title = @"Settings";
-
-	self->settings = @[
+- (instancetype)initWithStyle:(UITableViewStyle)style {
+	self = [super initWithStyle:style];
+	if (self) {
+		self->settings = @[
 		@{@"name": @"IPv6", @"display": @"Use IPv6", @"type": @"BOOL"},
 
 		@{@"name": @"DNSServer", @"display": @"DNS Server",
@@ -51,24 +49,25 @@
 			"\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0"
 			"\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0"
 			"\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0"
-			"\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0' --auto=none"
-			"--pf 80 --proto http --auto=none"
+			"\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0' --auto=none "
+			"--pf 80 --proto http --auto=none "
 			"--pf 50000-50099 --proto udp --ttl 64 --udp-fake 6 --round 1-4"
 		},
-	];
+		];
+
+		NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+		for (NSDictionary *setting in self->settings) {
+			id defaultValue = setting[@"default"];
+			if (defaultValue != nil && [defaults objectForKey:setting[@"name"]] == nil) {
+				[defaults setObject:defaultValue forKey:setting[@"name"]];
+			}
+		}
+	}
+	return self;
 }
 
 - (void) viewDidLoad {
-	for (NSDictionary *setting in self->settings) {
-		NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-		id defaultValue = setting[@"default"];
-		if (defaultValue != nil
-				&& [defaults objectForKey:setting[@"name"]] == nil)
-		{
-			[defaults setObject:defaultValue forKey:setting[@"name"]];
-		}
-	}
-
+	self.navigationItem.title = @"Settings";
 	self.tableView.dataSource = self;
 	self.tableView.delegate = self;
 	self.tableView.estimatedRowHeight = UITableViewAutomaticDimension;
