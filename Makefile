@@ -1,5 +1,5 @@
 TARGET := iphone:clang:latest:9.0
-ARCHS = arm64e arm64 armv7
+ARCHS = arm64e arm64
 INSTALL_TARGET_PROCESSES = Rumble
 PACKAGE_FORMAT ?= ipa
 ADDITIONAL_OBJCFLAGS = -Wunguarded-availability

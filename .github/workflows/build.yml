@@ -5,6 +5,7 @@ on:
     branches: [master, refactoring]
   pull_request:
     branches: [master, refactoring]
+
   workflow_dispatch:
 
 jobs:

@@ -5,4 +5,6 @@
 	NSArray *settings;
 }
 
++ (void)registerDefaults;
+
 @end
