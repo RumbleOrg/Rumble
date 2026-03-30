@@ -22,6 +22,7 @@
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+	[RMSettingsViewController registerDefaults];
 	_window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
 
 	RMRootViewController *mainController = [[RMRootViewController alloc] init];
