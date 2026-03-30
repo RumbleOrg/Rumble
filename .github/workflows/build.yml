@@ -1,34 +1,75 @@
-name: Build IPA
+name: Build Unsigned IPA
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [master]
   pull_request:
-    branches: [ main, master ]
+    branches: [master]
+  workflow_dispatch:
 
 jobs:
   build:
+    name: Build Unsigned IPA
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Install Theos
-      run: |
-        brew update
-        brew install ldid xz
-        git clone --recursive https://github.com/theos/theos.git $HOME/theos
-        echo "THEOS=$HOME/theos" >> $GITHUB_ENV
-        mkdir -p $HOME/theos/sdks
-        curl -L https://github.com/theos/sdks/releases/download/master-146e41f/iPhoneOS9.3.sdk.tar.xz | tar -xJv -C $HOME/theos/sdks/
+      # ── 2. Install Theos ─────────────────────────────────────────────────────
+      - name: Install Theos
+        run: |
+          export THEOS=~/.theos
+          git clone --recursive https://github.com/theos/theos $THEOS
+          echo "THEOS=$THEOS" >> $GITHUB_ENV
 
-    - name: Build IPA
-      run: make package
+      # ── 3. Install iOS SDK ───────────────────────────────────────────────────
+      - name: Install iOS SDK
+        run: |
+          XCODE_SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          SDK_VERSION=$(xcrun --sdk iphoneos --show-sdk-version)
+          echo "Using iOS SDK $SDK_VERSION at $XCODE_SDK"
+          mkdir -p $THEOS/sdks
+          ln -sf "$XCODE_SDK" "$THEOS/sdks/iPhoneOS${SDK_VERSION}.sdk"
+          echo "SDK_VERSION=$SDK_VERSION" >> $GITHUB_ENV
 
-    - name: Upload IPA
-      uses: actions/upload-artifact@v4
-      with:
-        name: Rumble.ipa
-        path: packages/*.ipa
+      # ── 4. Install ldid (required by Theos for fake-signing) ─────────────────
+      - name: Install ldid
+        run: brew install ldid
+
+      # ── 5. Build with Theos ──────────────────────────────────────────────────
+      - name: Build package
+        run: |
+          make package \
+            THEOS=$THEOS \
+            FINALPACKAGE=1 \
+            ARCHS="arm64" \
+            TARGET="iphone:clang:${{ env.SDK_VERSION }}:15.0" \
+            2>&1
+
+      # ── 6. Locate the .ipa produced by Theos ────────────────────────────────
+      - name: Locate IPA
+        run: |
+          set -e
+          echo "Contents of packages/:"
+          ls -la packages/ || true
+
+          IPA_PATH=$(find packages -name "*.ipa" | head -1)
+          if [ -z "$IPA_PATH" ]; then
+            echo "ERROR: No .ipa found in packages/"
+            exit 1
+          fi
+
+          echo "Found: $IPA_PATH"
+          echo "IPA_PATH=$IPA_PATH" >> $GITHUB_ENV
+
+      # ── 7. Upload IPA as artifact ────────────────────────────────────────────
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rumble-unsigned-ipa
+          path: ${{ env.IPA_PATH }}
+          retention-days: 14
