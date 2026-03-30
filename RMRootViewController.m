@@ -140,11 +140,11 @@
 			/* No manager - create new one */
 			mgr = [[NETunnelProviderManager alloc] init];
 			prot = [[NETunnelProviderProtocol alloc] init];
+			prot.providerBundleIdentifier = @"com.rpcsx.rumble.ext";
+			prot.serverAddress = @"localhost";
 			mgr.protocolConfiguration = prot;
 
 			mgr.localizedDescription = @"Rumble";
-			prot.providerBundleIdentifier = @"com.rpcsx.rumble.ext";
-			prot.serverAddress = @"localhost";
 			mgr.enabled = YES;
 		}
 
