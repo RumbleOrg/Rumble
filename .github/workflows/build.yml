@@ -2,9 +2,9 @@ name: Build Unsigned IPA
 # Got this from https://github.com/InfernumVII/Rumble
 on:
   push:
-    branches: [master]
+    branches: [master, refactoring]
   pull_request:
-    branches: [master]
+    branches: [master, refactoring]
   workflow_dispatch:
 
 jobs:
